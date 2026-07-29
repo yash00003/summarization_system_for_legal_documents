@@ -1,1 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DocuMage - Document Processor</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .summary-card {
+            background: linear-gradient(145deg, #1f2937, #111827);
+            border: 1px solid #374151;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .summary-card.expanded {
+            grid-column: 1 / -1;
+            z-index: 10;
+            min-height: auto !important; /* Remove fixed min-height */
+        }
+        
+        .summary-content {
+            max-height: 200px; /* Initial collapsed height */
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .expanded-summary-content {
+            max-height: none !important; /* Remove height restriction */
+            overflow-y: visible !important; /* Remove scroll */
+        }
+        .scroll-style::-webkit-scrollbar {
+            width: 8px;
+        }
+        .scroll-style::-webkit-scrollbar-track {
+            background: #1f2937;
+        }
+        .scroll-style::-webkit-scrollbar-thumb {
+            background: #4f46e5;
+            border-radius: 4px;
+        }
+        .container-wide {
+            max-width: 100% !important;
+            width: 98%;
+            padding: 0 1rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100">
+    <div class="container-wide mx-auto h-screen flex flex-col">
+        <header class="py-4 border-b border-gray-700">
+            <h1 class="text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">
+                DocuMage
+            </h1>
+            <p class="text-center text-gray-400 mt-2">Smart Document Processing</p>
+        </header>
 
+        <div class="flex-1 overflow-y-auto">
+            <!-- Upload Section -->
+            <div class="bg-gray-800/50 p-4 m-4 rounded-xl border border-gray-700">
+                <div class="flex gap-4">
+                    <div class="flex-1 relative">
+                        <input type="file" id="fileInput" 
+                            class="w-full p-2 rounded-lg bg-gray-700 border border-gray-600 focus:border-purple-500 focus:ring-2 focus:ring-purple-800 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-purple-600 file:text-white hover:file:bg-purple-500 transition-colors"
+                            accept=".pdf,.doc,.docx,.txt">
+                    </div>
+                    <button onclick="uploadFile()" 
+                            class="bg-purple-600 hover:bg-purple-500 text-white px-6 py-2 rounded-lg font-medium flex items-center gap-2 transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                        </svg>
+                        Process Document
+                    </button>
+                </div>
+            </div>
+
+            <!-- Summary Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4" id="summaryGrid">
+                <!-- Brief Summary -->
+                <div class="summary-card rounded-xl p-4" onclick="toggleSummary(this)">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-2 h-6 bg-purple-500 rounded-full"></div>
+                        <h3 class="text-lg font-semibold">Maximal Marginal Relevance Summary</h3>
+                    </div>
+                    <div id="brief" class="summary-content scroll-style text-gray-300 overflow-y-auto p-2 bg-gray-900/30 rounded-lg"></div>
+                </div>
+
+                <!-- Detailed Summary -->
+                <div class="summary-card rounded-xl p-4" onclick="toggleSummary(this)">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-2 h-6 bg-blue-500 rounded-full"></div>
+                        <h3 class="text-lg font-semibold">CaseSummarizer Summary</h3>
+                    </div>
+                    <div id="detailed" class="summary-content scroll-style text-gray-300 overflow-y-auto p-2 bg-gray-900/30 rounded-lg"></div>
+                </div>
+
+                <!-- Key Points -->
+                <div class="summary-card rounded-xl p-4" onclick="toggleSummary(this)">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-2 h-6 bg-green-500 rounded-full"></div>
+                        <h3 class="text-lg font-semibold">Legal-LED Summary</h3>
+                    </div>
+                    <div id="key_points" class="summary-content scroll-style text-gray-300 overflow-y-auto p-2 bg-gray-900/30 rounded-lg"></div>
+                </div>
+
+                <!-- Technical Summary -->
+                <div class="summary-card rounded-xl p-4" onclick="toggleSummary(this)">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-2 h-6 bg-yellow-500 rounded-full"></div>
+                        <h3 class="text-lg font-semibold">Pegasus Summary</h3>
+                    </div>
+                    <div id="technical" class="summary-content scroll-style text-gray-300 overflow-y-auto p-2 bg-gray-900/30 rounded-lg"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Save Section -->
+        <div class="bg-gray-800/50 p-4 border-t border-gray-700">
+            <div class="flex gap-2">
+                <input type="text" id="filename" 
+                    class="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:border-purple-500 focus:ring-2 focus:ring-purple-800"
+                    placeholder="output-file.pdf">
+                <button onclick="saveFile()" 
+                        class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-lg font-medium flex items-center gap-2 transition-all">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+                    </svg>
+                    Save All Summaries
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Toggle Summary Cards
+        function toggleSummary(card) {
+            const wasExpanded = card.classList.contains('expanded');
+            
+            document.querySelectorAll('.summary-card').forEach(c => {
+                c.classList.remove('expanded');
+                c.querySelector('.summary-content').style.maxHeight = '200px';
+            });
+            
+            if (!wasExpanded) {
+                card.classList.add('expanded');
+                // Calculate natural content height
+                const content = card.querySelector('.summary-content');
+                content.style.maxHeight = `${content.scrollHeight + 32}px`; // Add padding
+            }
+        }
+
+        // File Upload Handling
+        async function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const response = await fetch('/', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                // Handle non-JSON responses
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await response.text();
+                    throw new Error(`Unexpected response: ${text.slice(0, 100)}`);
+                }
+
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Upload failed');
+                }
+                
+                displaySummaries(data.summaries);
+            } catch (error) {
+                alert(`Upload failed: ${error.message}`);
+            }
+        }
+
+        // Save File Handling
+        async function saveFile() {
+            const filename = document.getElementById('filename').value || 'document';
+            const summaries = {
+                brief: document.getElementById('brief').textContent,
+                detailed: document.getElementById('detailed').textContent,
+                key_points: document.getElementById('key_points').textContent,
+                technical: document.getElementById('technical').textContent
+            };
+
+            try {
+                const response = await fetch('/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        filename: filename,
+                        ...summaries
+                    })
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${filename}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                } else {
+                    const error = await response.json();
+                    alert(error.error || 'Save failed');
+                }
+            } catch (error) {
+                alert('Save failed: ' + error.message);
+            }
+        }
+
+        // Display Summaries
+        function displaySummaries(summaries) {
+            document.getElementById('brief').textContent = summaries.brief;
+            document.getElementById('detailed').textContent = summaries.detailed;
+            document.getElementById('key_points').textContent = summaries.key_points;
+            document.getElementById('technical').textContent = summaries.technical;
+        }
+    </script>
+</body>
+</html>
