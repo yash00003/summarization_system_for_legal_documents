@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Virtual environments
+venv/
+env/
+.env
+.venv/
+
+# Model weights (use HuggingFace Hub instead)
+*.bin
+*.pt
+*.pth
+*.safetensors
+*.h5
+*.ckpt
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Distribution
+dist/
+build/
+*.egg-info/
+
+# Logs
+*.log
+
+# Gurobi
+gurobi.log
